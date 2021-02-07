@@ -10,6 +10,7 @@ from collections import namedtuple
 
 from pathlib import Path
 from feedgen.feed import FeedGenerator
+from google.cloud.storage import bucket
 
 SourceDest = namedtuple("SourceDest", "source_file_name destination_blob_name")
 
@@ -19,6 +20,7 @@ TITLE = os.getenv("TITLE")
 
 
 class StorageManager:
+
     def __init__(self, bucket_name=BUCKET_NAME):
         self.bucket_name = bucket_name
 
@@ -32,9 +34,17 @@ class StorageManager:
         bucket = storage_client.bucket(self.bucket_name)
         blob = bucket.blob(destination_blob_name)
         blob.upload_from_filename(source_file_name)
-        print(f"uploaded {source_file_name}")
 
-    def list_blobs(self):
+    def upload_string(self, string, destination_blob_name):
+        storage_client = storage.Client()
+        bucket = storage_client.bucket(self.bucket_name)
+        blob = bucket.blob(destination_blob_name)
+        blob.upload_from_string(string)
+
+    def list_pods(self, prefix="pods/"):
+        return storage.Client().list_blobs(self.bucket_name, prefix=prefix)        
+
+    def list_blobs(self, prefix=None):
         """Lists all the blobs in the bucket."""
         storage_client = storage.Client()
         # Note: Client.list_blobs requires at least package version 1.17.0.
@@ -43,11 +53,12 @@ class StorageManager:
             print(blob.name)
 
 
-class FeedManager(StorageManager):
-    def __init__(self, feed_name, title, bucket_name=BUCKET_NAME):
-        super().__init__(bucket_name)
+class FeedManager:
+    def __init__(self, feed_name, title, bucket_name=BUCKET_NAME, storage_manager=StorageManager()):
+        self.storage_manager = storage_manager
         self.feed_name = feed_name
         self.title = title
+        self.bucket_name=bucket_name
 
     def get_feed(self):
         fg = FeedGenerator()
@@ -64,14 +75,11 @@ class FeedManager(StorageManager):
         fe.title(self.title)
         fe.id(f"http:///www.null.com/{hash}")
         fe.description(self.title)
-        fe.link(href="http://example.com", rel="alternate")
+        fe.link(href="http://www.null.com", rel="alternate")
         fe.enclosure(fname, 0, "audio/mpeg")
 
-    def make_podcast_feed(self):
-        storage_client = storage.Client()
-        # Note: Client.list_blobs requires at least package version 1.17.0.
-        blobs = storage_client.list_blobs(self.bucket_name, prefix="pods/")
-        blobs = sorted(blobs, key=lambda k: k.time_created)
+    def gen_podcast_feed(self):
+        blobs = sorted(self.storage_manager.list_pods(), key=lambda k: k.time_created)
         pods = []
         for blob in blobs:
             if "json" in blob.name:
@@ -87,9 +95,7 @@ class FeedManager(StorageManager):
                 f"http://{self.bucket_name}/" + pod["fname"].replace(".json", ".mp3"),
                 pod["hash"],
             )
-        fg.rss_file("rss.xml", pretty=True)
-
-        self.upload_blob("rss.xml", "today.xml")
+        self.storage_manager.upload_string(fg.rss_str(pretty=True), "today.xml")
 
 
 @click.group()
@@ -106,6 +112,7 @@ def upload_pod(ctx, file):
     fname_json = fname_mp3.with_suffix(".json")
 
     s = StorageManager()
+        
     s.upload_blobs(
         [
             SourceDest(fname_mp3, "pods/" + fname_mp3.name),
@@ -134,7 +141,7 @@ def list_all(ctx):
 @main.command()
 @click.pass_context
 def gen_feed(ctx):
-    FeedManager(feed_name=FEED_NAME, title=TITLE).make_podcast_feed()
+    FeedManager(feed_name=FEED_NAME, title=TITLE).gen_podcast_feed()
 
 
 def start():

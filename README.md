@@ -22,7 +22,8 @@ pip3 install google-cloud-storage google-cloud-datastore
 docker built -t slurp .
 
 # docker run
-docker run --env GOOGLE_APPLICATION_CREDENTIALS=/usr/src/app/creds/creds.json  --mount type=bind,source=/src/dir,target=/usr/src/app/creds  slurp:latest
+docker run --env FEED_NAME=<name> --env RECORD_MINS=1 --env STREAM_URL=<url> --env BUCKET_NAME=<website-name> --env GOOGLE_APPLICATION_CREDENTIALS=/usr/src/app/creds/creds.json  --mount type=bind,source=/path-to-creds,target=/usr/src/app/creds  slurp:latest
+
 
 ```
 
