@@ -7,7 +7,7 @@ outdir=.
 record_mins(){
     local f=$1
     local mins=$2
-    mpv --ao=null --really-quiet --length=$((mins * 6)) --stream-record=${f} ${url}
+    mpv --ao=null --really-quiet --length=$((mins * 60)) --stream-record=${f} ${url}
 }
 
 apply_tags(){

@@ -70,11 +70,11 @@ class FeedManager:
         fg.link(href="http://www.null.com/test.atom", rel="self")
         return fg
 
-    def add_entry(self, fg, fname, hash):
+    def add_entry(self, fg, desc, fname, hash):
         fe = fg.add_entry()
         fe.title(self.title)
         fe.id(f"http:///www.null.com/{hash}")
-        fe.description(self.title)
+        fe.description(desc)
         fe.link(href="http://www.null.com", rel="alternate")
         fe.enclosure(fname, 0, "audio/mpeg")
 
@@ -92,9 +92,11 @@ class FeedManager:
         for pod in pods:
             self.add_entry(
                 fg,
+                pod["title"],
                 f"http://{self.bucket_name}/" + pod["fname"].replace(".json", ".mp3"),
                 pod["hash"],
             )
+        print(fg.rss_str(pretty=True))
         self.storage_manager.upload_string(fg.rss_str(pretty=True), "today.xml")
 
 
