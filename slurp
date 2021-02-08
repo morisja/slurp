@@ -1,0 +1,59 @@
+#!/bin/bash -eu
+mins="${RECORD_MINS}"
+title="${TITLE}"
+url="${STREAM_URL}"
+outdir=.
+
+record_mins(){
+    local f=$1
+    local mins=$2
+    mpv --ao=null --really-quiet --length=$((mins * 6)) --stream-record=${f} ${url}
+}
+
+apply_tags(){
+    local f=$1
+    local album=$2
+    local title=$3
+    id3v2 -A "${album}" ${f} > /dev/null
+    id3v2 -t "${title}" ${f} > /dev/null
+}
+
+usage(){
+    echo "usage: -m mins -t title -u url -o outdir"
+    exit 2
+}
+
+parse_args(){
+    local OPTIND
+    while getopts "m:t:u:o:" OPTION; do
+    case $OPTION in
+    m)
+    mins=$OPTARG
+    ;;
+    t)
+    title=$OPTARG
+    ;;
+    u)
+    url=$OPTARG
+    ;;
+    o)
+    outdir=$OPTARG
+    ;;
+    *)
+    usage
+    ;;
+    esac
+    done
+    if [ -z "${mins}" ] || [ -z "${title}" ] || [ -z "${url}" ] || [ -z "${outdir}" ]; then
+        usage
+    fi
+}
+
+parse_args "$@"
+
+d=$(date '+%Y-%m-%d-%H-%M')
+outfile="${outdir}/${title}-${d}.mp3"
+record_mins ${outfile} ${mins}
+apply_tags ${outfile} "${title}" "${d}"
+echo "${outfile}"
+exit 0
