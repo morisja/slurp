@@ -1,0 +1,8 @@
+[Unit]
+Description=slurp
+
+[Timer]
+OnCalendar=Mon..Fri *-*-* 5:59:00 Europe/London
+
+[Install]
+WantedBy=timers.target

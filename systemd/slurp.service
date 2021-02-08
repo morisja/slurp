@@ -1,0 +1,6 @@
+[Unit]
+Name=slurp
+
+[Service]
+ExecStart=docker run --env-file=<FILE> --mount type=bind,source=/path-to-creds,target=/usr/src/app/creds  slurp:latest
+
