@@ -1,13 +1,15 @@
 # slurp - make podcasts of audio feeds
 
-## why ?
+## Why ?
 I found one of my favourite radio shows does not have a podcast
 
-## how does it work ?
+## How does it work ?
 
-runit.sh uses mpv to record a stream for a fixed period of time and apply id3 tags
+mpv records a stream for a fixed period of time, id3 tags are applied
 
-post-process.py generates a json doc including those tags, and writes the file and the info to gcs, before reading all json files and generating an xml feed file.
+post-process.py generates a json doc of the tags, writes the recording and tags to gcs
+
+post-process.py reads all the json files and to generate a full xml feed file.
 
 ## notes
 Local
@@ -16,14 +18,17 @@ Local
 # setup local python env
 python3 -m venv env
 source env/bin/activate
-pip3 install google-cloud-storage google-cloud-datastore
+pip3 install -r requirements.txt
+./run.sh
 
+
+
+```
+Docker
+```
 # docker build
 docker built -t slurp .
 
 # docker run
-docker run --env FEED_NAME=<name> --env RECORD_MINS=1 --env STREAM_URL=<url> --env BUCKET_NAME=<website-name> --env GOOGLE_APPLICATION_CREDENTIALS=/usr/src/app/creds/creds.json  --mount type=bind,source=/path-to-creds,target=/usr/src/app/creds  slurp:latest
-
-
+docker run --env FEED_NAME=<name> --env RECORD_MINS=<mins> --env STREAM_URL=<url> --env BUCKET_NAME=<website-name> --env GOOGLE_APPLICATION_CREDENTIALS=/usr/src/app/creds/creds.json  --mount type=bind,source=/path-to-creds,target=/usr/src/app/creds  slurp:latest
 ```
-
