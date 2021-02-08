@@ -11,7 +11,7 @@ post-process.py generates a json doc of the tags, writes the recording and tags 
 
 post-process.py reads all the json files and to generate a full xml feed file.
 
-## notes
+## Notes
 Local
 
 ```
@@ -20,9 +20,6 @@ python3 -m venv env
 source env/bin/activate
 pip3 install -r requirements.txt
 ./run.sh
-
-
-
 ```
 Docker
 ```
